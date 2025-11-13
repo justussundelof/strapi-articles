@@ -38,16 +38,23 @@ async function getArticles(): Promise<Article[]> {
 
     // Process articles: filter out invalid ones and generate slugs if missing
     const validArticles = data.data
-      .filter((article) => article?.attributes?.title) // Must have a title
+      .filter((article) => {
+        const hasTitle = article?.attributes?.title
+        console.log(`Article ${article?.id}: hasTitle=${hasTitle}`)
+        return hasTitle
+      })
       .map((article) => {
         // If slug is null or empty, generate it from the title
         if (!article.attributes.slug) {
-          article.attributes.slug = generateSlug(article.attributes.title)
+          const generatedSlug = generateSlug(article.attributes.title)
+          console.log(`Generated slug for "${article.attributes.title}": ${generatedSlug}`)
+          article.attributes.slug = generatedSlug
         }
         return article
       })
 
     console.log(`Processed ${validArticles.length} valid articles`)
+    console.log('Final articles:', validArticles.map(a => ({ id: a.id, title: a.attributes.title, slug: a.attributes.slug })))
 
     return validArticles
   } catch (error) {
@@ -68,6 +75,9 @@ export const Route = createFileRoute('/articles')({
 
 function ArticlesPage() {
   const { articles } = Route.useLoaderData()
+
+  console.log('ArticlesPage render - articles count:', articles.length)
+  console.log('ArticlesPage render - articles:', articles)
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
