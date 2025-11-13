@@ -68,7 +68,7 @@ function ArticlesPage() {
             {articles.map((article) => (
               <Link
                 key={article.id}
-                to="/articles_/$slug"
+                to="/articles/$slug"
                 params={{ slug: article.attributes.slug }}
                 className="group bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6 hover:border-cyan-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/10 hover:scale-105"
               >
