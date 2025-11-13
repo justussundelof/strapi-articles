@@ -4,10 +4,23 @@ import type { Article, ArticleAttributes, StrapiResponse } from '../types/strapi
 
 const STRAPI_BASE_URL = 'http://localhost:1337/api'
 
+// Helper function to generate slug from title
+function generateSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+    .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+    .trim()
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-') // Remove duplicate hyphens
+}
+
 // Loader function to fetch article by slug
 async function getArticleBySlug(slug: string): Promise<Article | null> {
   try {
-    const response = await fetch(
+    // First try to find by slug field
+    let response = await fetch(
       `${STRAPI_BASE_URL}/articles?filters[slug][$eq]=${slug}&populate=category`,
       {
         headers: {
@@ -20,10 +33,41 @@ async function getArticleBySlug(slug: string): Promise<Article | null> {
       throw new Error(`Failed to fetch article: ${response.statusText}`)
     }
 
-    const data: StrapiResponse<ArticleAttributes> = await response.json()
+    let data: StrapiResponse<ArticleAttributes> = await response.json()
 
+    // If not found by slug, fetch all articles and match by generated slug
     if (!data.data || data.data.length === 0) {
-      return null
+      response = await fetch(
+        `${STRAPI_BASE_URL}/articles?populate=category`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch articles: ${response.statusText}`)
+      }
+
+      data = await response.json()
+
+      // Find article where generated slug matches
+      const matchedArticle = data.data.find((article) => {
+        const articleSlug = article.attributes.slug || generateSlug(article.attributes.title)
+        return articleSlug === slug
+      })
+
+      if (!matchedArticle) {
+        return null
+      }
+
+      // Generate slug if missing
+      if (!matchedArticle.attributes.slug) {
+        matchedArticle.attributes.slug = generateSlug(matchedArticle.attributes.title)
+      }
+
+      return matchedArticle
     }
 
     return data.data[0]

@@ -3,6 +3,18 @@ import type { Article, ArticleAttributes, StrapiResponse } from '../types/strapi
 
 const STRAPI_BASE_URL = 'http://localhost:1337/api'
 
+// Helper function to generate slug from title
+function generateSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+    .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+    .trim()
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-') // Remove duplicate hyphens
+}
+
 // Loader function to fetch articles
 async function getArticles(): Promise<Article[]> {
   try {
@@ -24,10 +36,18 @@ async function getArticles(): Promise<Article[]> {
     // Debug log to see the actual response structure
     console.log('Strapi API response:', JSON.stringify(data, null, 2))
 
-    // Filter out any invalid articles and ensure they have required fields
-    const validArticles = data.data.filter(
-      (article) => article?.attributes?.slug && article?.attributes?.title
-    )
+    // Process articles: filter out invalid ones and generate slugs if missing
+    const validArticles = data.data
+      .filter((article) => article?.attributes?.title) // Must have a title
+      .map((article) => {
+        // If slug is null or empty, generate it from the title
+        if (!article.attributes.slug) {
+          article.attributes.slug = generateSlug(article.attributes.title)
+        }
+        return article
+      })
+
+    console.log(`Processed ${validArticles.length} valid articles`)
 
     return validArticles
   } catch (error) {
@@ -74,9 +94,7 @@ function ArticlesPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {articles
-              .filter((article) => article?.attributes?.slug && article?.attributes?.title) // Filter out invalid articles
-              .map((article) => (
+            {articles.map((article) => (
                 <Link
                   key={article.id}
                   to="/articles/$slug"

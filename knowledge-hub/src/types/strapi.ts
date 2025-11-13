@@ -19,11 +19,11 @@ export interface Category {
 // Article Type (Strapi attributes only)
 export interface ArticleAttributes {
   title: string
-  slug: string
+  slug: string | null // Can be null if not set in Strapi
   content: RichTextContent[]
   category: {
-    data: Category
-  }
+    data: Category | null
+  } | null
   publishedAt: string
 }
 
