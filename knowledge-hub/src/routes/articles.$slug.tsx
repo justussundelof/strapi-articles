@@ -33,7 +33,7 @@ async function getArticleBySlug(slug: string): Promise<Article | null> {
   }
 }
 
-export const Route = createFileRoute('/articles_/$slug')({
+export const Route = createFileRoute('/articles/$slug')({
   loader: async ({ params }) => {
     const article = await getArticleBySlug(params.slug)
 
