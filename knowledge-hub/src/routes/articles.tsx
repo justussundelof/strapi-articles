@@ -7,7 +7,7 @@ const STRAPI_BASE_URL = 'http://localhost:1337/api'
 async function getArticles(): Promise<Article[]> {
   try {
     const response = await fetch(
-      `${STRAPI_BASE_URL}/articles?populate=category`,
+      `${STRAPI_BASE_URL}/articles?populate=*`,
       {
         headers: {
           'Content-Type': 'application/json',
@@ -23,11 +23,25 @@ async function getArticles(): Promise<Article[]> {
 
     // Debug log to see the actual response structure
     console.log('Strapi API response:', JSON.stringify(data, null, 2))
+    console.log('Number of articles received:', data.data.length)
+
+    // Log each article's slug and title to see what we have
+    data.data.forEach((article, index) => {
+      console.log(`Article ${index}:`, {
+        id: article.id,
+        slug: article.attributes?.slug,
+        title: article.attributes?.title,
+        hasSlug: !!article.attributes?.slug,
+        hasTitle: !!article.attributes?.title,
+      })
+    })
 
     // Filter out any invalid articles and ensure they have required fields
     const validArticles = data.data.filter(
       (article) => article?.attributes?.slug && article?.attributes?.title
     )
+
+    console.log('Number of valid articles after filtering:', validArticles.length)
 
     return validArticles
   } catch (error) {
