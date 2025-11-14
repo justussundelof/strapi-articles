@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound } from '@tanstack/react-router'
 import { BlocksRenderer } from '@strapi/blocks-react-renderer'
-import type { Article, ArticleAttributes, StrapiResponse } from '../types/strapi'
+import type { Article, StrapiResponse } from '../types/strapi'
 
 const STRAPI_BASE_URL = 'http://localhost:1337/api'
 
@@ -8,7 +8,7 @@ const STRAPI_BASE_URL = 'http://localhost:1337/api'
 async function getArticleBySlug(slug: string): Promise<Article | null> {
   try {
     const response = await fetch(
-      `${STRAPI_BASE_URL}/articles?filters[slug][$eq]=${slug}&populate=category`,
+      `${STRAPI_BASE_URL}/articles?filters[slug][$eq]=${slug}&populate=*`,
       {
         headers: {
           'Content-Type': 'application/json',
@@ -20,7 +20,7 @@ async function getArticleBySlug(slug: string): Promise<Article | null> {
       throw new Error(`Failed to fetch article: ${response.statusText}`)
     }
 
-    const data: StrapiResponse<ArticleAttributes> = await response.json()
+    const data: StrapiResponse = await response.json()
 
     if (!data.data || data.data.length === 0) {
       return null
@@ -79,23 +79,23 @@ function ArticlePage() {
         {/* Article Container */}
         <article className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-8 md:p-12">
           {/* Category Badge */}
-          {article.attributes.category?.data && (
+          {article.category && (
             <div className="mb-6">
               <span className="inline-block px-4 py-1.5 text-sm font-semibold text-cyan-400 bg-cyan-400/10 rounded-full">
-                {article.attributes.category.data.attributes.name}
+                {article.category.Name}
               </span>
             </div>
           )}
 
           {/* Title */}
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            {article.attributes.title}
+            {article.title}
           </h1>
 
           {/* Published Date */}
           <p className="text-gray-400 mb-8 pb-8 border-b border-slate-700">
             Published on{' '}
-            {new Date(article.attributes.publishedAt).toLocaleDateString('en-US', {
+            {new Date(article.publishedAt).toLocaleDateString('en-US', {
               year: 'numeric',
               month: 'long',
               day: 'numeric',
@@ -104,7 +104,7 @@ function ArticlePage() {
 
           {/* Article Content with Prose Styling */}
           <div className="prose prose-invert prose-lg prose-cyan max-w-none">
-            <BlocksRenderer content={article.attributes.content} />
+            <BlocksRenderer content={article.content} />
           </div>
         </article>
 

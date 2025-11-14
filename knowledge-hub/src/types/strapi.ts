@@ -5,39 +5,33 @@ export interface RichTextContent {
   [key: string]: any
 }
 
-// Category Type (Strapi attributes only)
-export interface CategoryAttributes {
-  name: string
-  slug: string
-}
-
+// Category Type (Strapi v5 flat format)
 export interface Category {
   id: number
-  attributes: CategoryAttributes
-}
-
-// Article Type (Strapi attributes only)
-export interface ArticleAttributes {
-  title: string
+  documentId: string
+  Name: string
   slug: string
-  content: RichTextContent[]
-  category: {
-    data: Category
-  }
+  createdAt: string
+  updatedAt: string
   publishedAt: string
 }
 
+// Article Type (Strapi v5 flat format)
 export interface Article {
   id: number
-  attributes: ArticleAttributes
+  documentId: string
+  title: string
+  slug: string | null
+  content: RichTextContent[]
+  category: Category
+  createdAt: string
+  updatedAt: string
+  publishedAt: string
 }
 
-// Strapi API Response Types
-export interface StrapiResponse<T> {
-  data: Array<{
-    id: number
-    attributes: T
-  }>
+// Strapi API Response Types (v5 format)
+export interface StrapiResponse {
+  data: Article[]
   meta: {
     pagination: {
       page: number
@@ -48,9 +42,23 @@ export interface StrapiResponse<T> {
   }
 }
 
-export interface StrapiSingleResponse<T> {
-  data: {
-    id: number
-    attributes: T
-  } | null
+export interface StrapiSingleResponse {
+  data: Article | null
+  meta?: any
+}
+
+// Legacy types for backward compatibility (deprecated)
+export interface CategoryAttributes {
+  name: string
+  slug: string
+}
+
+export interface ArticleAttributes {
+  title: string
+  slug: string
+  content: RichTextContent[]
+  category: {
+    data: Category
+  }
+  publishedAt: string
 }

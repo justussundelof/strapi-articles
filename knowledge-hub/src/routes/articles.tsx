@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import type { Article, ArticleAttributes, StrapiResponse } from '../types/strapi'
+import type { Article, StrapiResponse } from '../types/strapi'
 
 const STRAPI_BASE_URL = 'http://localhost:1337/api'
 
@@ -19,35 +19,17 @@ async function getArticles(): Promise<Article[]> {
       throw new Error(`Failed to fetch articles: ${response.statusText}`)
     }
 
-    const data: StrapiResponse<ArticleAttributes> = await response.json()
+    const data: StrapiResponse = await response.json()
 
-    // Debug log to see the actual response structure
-    console.log('Strapi API response:', JSON.stringify(data, null, 2))
-    console.log('Number of articles received:', data.data.length)
-
-    // Log the full structure of the first article to see what we're getting
-    if (data.data.length > 0) {
-      console.log('Full first article structure:', data.data[0])
-      console.log('First article attributes:', data.data[0].attributes)
-    }
-
-    // Log each article's slug and title to see what we have
-    data.data.forEach((article, index) => {
-      console.log(`Article ${index}:`, {
-        id: article.id,
-        slug: article.attributes?.slug,
-        title: article.attributes?.title,
-        hasSlug: !!article.attributes?.slug,
-        hasTitle: !!article.attributes?.title,
-      })
-    })
+    console.log('Fetched articles from Strapi:', data.data.length)
 
     // Filter out any invalid articles and ensure they have required fields
+    // Note: slug can be null in Strapi, so we filter those out
     const validArticles = data.data.filter(
-      (article) => article?.attributes?.slug && article?.attributes?.title
+      (article) => article.slug && article.title
     )
 
-    console.log('Number of valid articles after filtering:', validArticles.length)
+    console.log('Valid articles after filtering:', validArticles.length)
 
     return validArticles
   } catch (error) {
@@ -94,39 +76,35 @@ function ArticlesPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {articles
-              .filter((article) => article?.attributes?.slug && article?.attributes?.title) // Filter out invalid articles
-              .map((article) => (
-                <Link
-                  key={article.id}
-                  to="/articles/$slug"
-                  params={{ slug: article.attributes.slug }}
-                  className="group bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6 hover:border-cyan-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/10 hover:scale-105"
-                >
-                  {/* Category Badge */}
-                  {article.attributes.category?.data && (
-                    <div className="mb-4">
-                      <span className="inline-block px-3 py-1 text-xs font-semibold text-cyan-400 bg-cyan-400/10 rounded-full">
-                        {article.attributes.category.data.attributes.name}
-                      </span>
-                    </div>
-                  )}
+            {articles.map((article) => (
+              <Link
+                key={article.id}
+                to="/articles/$slug"
+                params={{ slug: article.slug! }}
+                className="group bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6 hover:border-cyan-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/10 hover:scale-105"
+              >
+                {/* Category Badge */}
+                {article.category && (
+                  <div className="mb-4">
+                    <span className="inline-block px-3 py-1 text-xs font-semibold text-cyan-400 bg-cyan-400/10 rounded-full">
+                      {article.category.Name}
+                    </span>
+                  </div>
+                )}
 
-                  {/* Title */}
-                  <h2 className="text-2xl font-semibold text-white mb-3 group-hover:text-cyan-400 transition-colors">
-                    {article.attributes.title}
-                  </h2>
+                {/* Title */}
+                <h2 className="text-2xl font-semibold text-white mb-3 group-hover:text-cyan-400 transition-colors">
+                  {article.title}
+                </h2>
 
-                  {/* Published Date */}
-                  <p className="text-gray-400 text-sm">
-                    {new Date(
-                      article.attributes.publishedAt
-                    ).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })}
-                  </p>
+                {/* Published Date */}
+                <p className="text-gray-400 text-sm">
+                  {new Date(article.publishedAt).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })}
+                </p>
 
                 {/* Read More Link */}
                 <div className="mt-4 flex items-center text-cyan-400 text-sm font-medium">
