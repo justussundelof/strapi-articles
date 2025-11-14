@@ -25,6 +25,12 @@ async function getArticles(): Promise<Article[]> {
     console.log('Strapi API response:', JSON.stringify(data, null, 2))
     console.log('Number of articles received:', data.data.length)
 
+    // Log the full structure of the first article to see what we're getting
+    if (data.data.length > 0) {
+      console.log('Full first article structure:', data.data[0])
+      console.log('First article attributes:', data.data[0].attributes)
+    }
+
     // Log each article's slug and title to see what we have
     data.data.forEach((article, index) => {
       console.log(`Article ${index}:`, {
